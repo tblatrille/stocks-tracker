@@ -1,0 +1,40 @@
+# List of stock tickers to track
+tickers:
+  - ABBV # AbbVie
+  - AMD # AMD
+  - AMC # AMC Entertainment
+  - AMZN # Amazon
+  - AAPL # Apple
+  - AZN # AstraZeneca
+  - BTC-USD # Bitcoin
+  - BMY # Bristol Myers Squibb
+  - CVS # CVS Health
+  - DIS # Disney
+  - GOOG # Google
+  - JNJ # Johnson & Johnson
+  - JPM # JPMorgan Chase
+  - KO # Coca-Cola
+  - MCD # McDonald's
+  - MMM # 3M
+  - MRK # Merck & Co.
+  - MRNA # Moderna
+  - MSFT # Microsoft
+  - MSTR # MicroStrategy
+  - NFLX # Netflix
+  - NVDA # Nvidia
+  - O # Realty Income
+  - PEP # PepsiCo
+  - PFE # Pfizer
+  - PG # Procter & Gamble
+  - SCHD # Schwab High Dividend ETF
+  - SPOT # Spotify
+  - SPY
+  - T # AT&T
+  - TGT # Target
+  - TSLA # Tesla
+  - V # Visa
+  - VTI # Vanguard Total Stock Market Index Fund
+  - VOO # Vanguard 500 Index Fund
+  - VZ # Verizon Communications
+  - WBA # Walgreens Boots Alliance
+  - WMT # Walmart

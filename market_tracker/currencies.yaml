@@ -1,0 +1,5 @@
+currencies:
+  M2:
+    multiplier: 1_000_000_000  # 1 billion
+  BTC-USD:
+    multiplier: 21_000_000  # 21 million
