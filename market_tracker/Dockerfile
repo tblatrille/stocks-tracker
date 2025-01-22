@@ -1,5 +1,5 @@
 # Base Python image
-FROM python:3.13.1-slim
+FROM python:slim
 
 # Set working directory
 WORKDIR /app
@@ -7,6 +7,7 @@ WORKDIR /app
 # Copy FastAPI app files and the parquet_files directory
 COPY market_tracker /app
 COPY parquet_files /app/parquet_files
+COPY csv_files /app/csv_files
 
 # Upgrade pip
 RUN python -m pip install --no-cache-dir --upgrade pip

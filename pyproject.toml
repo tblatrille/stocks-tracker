@@ -12,6 +12,7 @@ dependencies = [
     "pyarrow>=18.1.0",
     "pyyaml>=6.0.2",
     "ruff>=0.8.3",
+    "scipy>=1.14.1",
     "streamlit>=1.41.1",
     "uvicorn>=0.32.1",
     "yfinance>=0.2.50",

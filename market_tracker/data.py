@@ -1,83 +1,60 @@
-import polars as pl
-from typing import List
-import yaml
 import os
+from pathlib import Path
+import polars as pl
+import yaml
 
 class ParquetFiles:
-    def __init__(self, parquet_data_dir: str = "parquet_files"):
-        self.parquet_data_dir = parquet_data_dir
+    def __init__(self, base_dir: str, parquet_data_dir: str = "parquet_files"):
+        self.parquet_data_dir = os.path.join(base_dir, parquet_data_dir)
 
     @property
     def lazy_frame(self) -> pl.LazyFrame:
         """
-        Lazy load all parquet files and enforce schema:
-        Columns: Date, Ticker, Close, MarketCap.
-        Missing columns are filled with None.
+        Lazy load all parquet files.
         """
-        schema = ["Date", "Ticker", "Close", "MarketCap"]
         return (
             pl.scan_parquet(f"{self.parquet_data_dir}/**/*.parquet")
             .with_columns(
-                pl.col("Date").cast(pl.Datetime)  # Ensure Date is a Datetime
+                pl.col("Date").cast(pl.Date)  # Cast to Date (day precision)
             )
-            .pipe(self._enforce_schema, schema=schema)
         )
-
-    @staticmethod
-    def _enforce_schema(lf: pl.LazyFrame, schema: List[str]) -> pl.LazyFrame:
-        """
-        Ensures that the LazyFrame conforms to the specified schema.
-        Adds missing columns with default None values.
-        """
-        for col in schema:
-            if col not in lf.schema:
-                lf = lf.with_columns(pl.lit(None).alias(col))
-        return lf.select(schema)  # Ensure correct column order
 
 
 class CsvFiles:
-    def __init__(self, csv_data_dir: str = "csv_files"):
-        self.csv_data_dir = csv_data_dir
+    def __init__(self, base_dir: str, csv_data_dir: str = "csv_files"):
+        self.csv_data_dir = os.path.join(base_dir, csv_data_dir)
 
     @property
     def lazy_frame(self) -> pl.LazyFrame:
         """
-        Lazy load all CSV files and enforce schema:
-        Columns: Date, Ticker, Close, MarketCap.
-        Missing columns are filled with None.
+        Lazy load all CSV files and add a 'Ticker' column based on the filename.
         """
-        schema = ["Date", "Ticker", "Close", "MarketCap"]
-        return (
-            pl.scan_csv(f"{self.csv_data_dir}/**/*.csv")
-            .with_columns(
-                pl.col("Date").str.strptime(pl.Datetime, "%Y-%m-%d")  # Ensure Date is a Datetime
+        csv_files = Path(self.csv_data_dir).rglob("*.csv")
+        frames = []
+        for csv_file in list(csv_files):
+            ticker = csv_file.stem
+            df = (
+                pl.scan_csv(csv_file)
+                .with_columns(
+                    pl.lit(ticker).alias("Ticker"),  # Add the Ticker column
+                    pl.col("Date").str.strptime(pl.Date, "%Y-%m-%d")  # Convert Date to Date type (day precision)
+                )
             )
-            .pipe(self._enforce_schema, schema=schema)
-        )
-
-    @staticmethod
-    def _enforce_schema(lf: pl.LazyFrame, schema: List[str]) -> pl.LazyFrame:
-        """
-        Ensures that the LazyFrame conforms to the specified schema.
-        Adds missing columns with default None values.
-        """
-        for col in schema:
-            if col not in lf.schema:
-                lf = lf.with_columns(pl.lit(None).alias(col))
-        return lf.select(schema)  # Ensure correct column order
+            frames.append(df)
+        return pl.concat(frames) if frames else pl.DataFrame()  # Concatenate all frames
 
 
 class MarketData:
     """
     A class to handle market data stored in parquet and csv files using Polars LazyFrame.
     """
-    def __init__(self, parquet_data_dir: str = "parquet_files", csv_data_dir: str = "csv_files", yaml_file: str = "currencies.yaml"):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.yaml_file = os.path.join(base_dir, yaml_file)
-        self.parquet_files = ParquetFiles(parquet_data_dir)
-        self.csv_files = CsvFiles(csv_data_dir)
+    def __init__(self, base_dir: str, parquet_data_dir: str = "parquet_files", csv_data_dir: str = "csv_files", yaml_file: str = "currencies.yaml"):
+        self.parquet_files = ParquetFiles(base_dir, parquet_data_dir)
+        self.csv_files = CsvFiles(base_dir, csv_data_dir)
         self._lazy_frame = None
         self._currencies_frame = None
+        base_dir_ = os.path.dirname(os.path.abspath(__file__))
+        self.yaml_file = os.path.join(base_dir_, yaml_file)
 
     @property
     def df(self) -> pl.LazyFrame:
@@ -133,5 +110,6 @@ class MarketData:
 
         return self._currencies_frame
 
-
-Tickers = MarketData()
+# Example usage
+base_dir = os.getcwd()  # Get the current working directory
+Tickers = MarketData(base_dir)

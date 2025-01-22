@@ -84,4 +84,4 @@ def scrape_ticker_data(tickers, start_date=None, end_date=None, output_dir="parq
 # Example usage
 if __name__ == "__main__":
     tickers = read_tickers()
-    scrape_ticker_data(tickers=tickers, start_date="1900-01-01", end_date="2024-12-13")
+    scrape_ticker_data(tickers=tickers, start_date="1900-01-01", end_date="2024-12-29")

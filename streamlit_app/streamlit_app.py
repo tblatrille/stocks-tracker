@@ -2,12 +2,13 @@ import streamlit as st
 import requests
 import plotly.graph_objects as go
 from datetime import datetime
+import os
 
 # API base URL
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # Set up the page
-st.set_page_config(page_title="", layout="wide")
+st.set_page_config(page_title="", layout="wide", page_icon=":rocket:")
 
 # Sidebar setup
 view_type = st.sidebar.radio("", ["Prices", "MarketCap", "Ratio"])
@@ -31,44 +32,49 @@ end_date = st.sidebar.date_input(
 )
 
 if view_type == "Prices":
-    # Single ticker selector for prices
-    ticker = st.sidebar.selectbox("Select Ticker", tickers)
+    # Multiselect for prices
+    selected_tickers = st.sidebar.multiselect("Select Tickers", tickers, default=tickers[:1])
     
-    if st.sidebar.button("Fetch Data"):
-        # Get price data
-        response = requests.get(
-            f"{API_URL}/prices/{ticker}",
-            params={
-                "start_date": start_date.strftime("%Y-%m-%d"),
-                "end_date": end_date.strftime("%Y-%m-%d")
-            }
-        )
-        data = response.json()
-        
-        # Create plot
+    if selected_tickers:  # Automatically fetch data if tickers are selected
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=[item["date"] for item in data],
-            y=[item["price"] for item in data],
-            mode='lines',
-            name=ticker
-        ))
+        
+        for ticker in selected_tickers:
+            # Get price data
+            response = requests.get(
+                f"{API_URL}/prices/{ticker}",
+                params={
+                    "start_date": start_date.strftime("%Y-%m-%d"),
+                    "end_date": end_date.strftime("%Y-%m-%d")
+                }
+            )
+            data = response.json()
+            
+            # Add ticker data to the plot
+            fig.add_trace(go.Scatter(
+                x=[item["date"] for item in data],
+                y=[item["price"] for item in data],
+                mode='lines',
+                name=ticker
+            ))
         
         fig.update_layout(
-            title=f"{ticker} Price History",
+            title="Price History",
             xaxis_title="Date",
             yaxis_title="Price",
-            hovermode='x unified'
+            hovermode='x unified',
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=False)
         )
         
         st.plotly_chart(fig, use_container_width=True)
 
 elif view_type == "Ratio":
-    # Two ticker selectors for ratio
-    ticker1 = st.sidebar.selectbox("First Ticker", tickers, key="ticker1")
-    ticker2 = st.sidebar.selectbox("Second Ticker", tickers, key="ticker2")
+    # Multiselect for ratio (restricted to exactly two tickers)
+    selected_tickers = st.sidebar.multiselect("Select Two Tickers for Ratio", tickers, default=tickers[:2])
     
-    if st.sidebar.button("Fetch Data"):
+    if len(selected_tickers) == 2:  # Automatically fetch data if exactly two tickers are selected
+        ticker1, ticker2 = selected_tickers
+        
         # Get ratio data
         response = requests.get(
             f"{API_URL}/ratio/{ticker1}/{ticker2}",
@@ -92,41 +98,49 @@ elif view_type == "Ratio":
             title=f"Price Ratio: {ticker1}/{ticker2}",
             xaxis_title="Date",
             yaxis_title="Ratio",
-            hovermode='x unified'
+            hovermode='x unified',
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=False)
         )
         
         st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.error("Please select exactly two tickers for the Ratio view.")
 
 elif view_type == "MarketCap":
-    # Single ticker selector for MarketCap
-    ticker = st.sidebar.selectbox("Select Ticker", tickers)
+    # Multiselect for MarketCap
+    selected_tickers = st.sidebar.multiselect("Select Tickers", tickers, default=tickers[:1])
     
-    if st.sidebar.button("Fetch Data"):
-        # Get market cap data
-        response = requests.get(
-            f"{API_URL}/marketcap",
-            params={
-                "ticker": ticker,
-                "start_date": start_date.strftime("%Y-%m-%d"),
-                "end_date": end_date.strftime("%Y-%m-%d")
-            }
-        )
-        data = response.json()
-        # Create plot
+    if selected_tickers:  # Automatically fetch data if tickers are selected
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=[item["date"] for item in data],
-            y=[item["market_cap"] for item in data],
-            mode='lines',
-            name=f"{ticker} MarketCap"
-        ))
+        
+        for ticker in selected_tickers:
+            # Get market cap data
+            response = requests.get(
+                f"{API_URL}/marketcap",
+                params={
+                    "ticker": ticker,
+                    "start_date": start_date.strftime("%Y-%m-%d"),
+                    "end_date": end_date.strftime("%Y-%m-%d")
+                }
+            )
+            data = response.json()
+            
+            # Add ticker data to the plot
+            fig.add_trace(go.Scatter(
+                x=[item["date"] for item in data],
+                y=[item["market_cap"] for item in data],
+                mode='lines',
+                name=f"{ticker}"
+            ))
         
         fig.update_layout(
-            title=f"{ticker} MarketCap",
+            title="MarketCap History",
             xaxis_title="Date",
             yaxis_title="MarketCap",
             hovermode='x unified',
-            yaxis=dict(type='log')
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=False)
         )
         
         st.plotly_chart(fig, use_container_width=True)
