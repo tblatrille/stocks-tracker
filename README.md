@@ -1,7 +1,7 @@
-# Market Tracker Project
+# Market Tracker
 
 ## Overview
-The **Market Tracker** is a containerized application for tracking financial data, visualizing stock prices, market caps, and price ratios. It consists of a **FastAPI** backend, a **Streamlit** frontend, and a scarper for fetching data.
+The **Market Tracker** is a containerized application for tracking financial data, visualizing stock prices, market caps, and price ratios. It consists of a **FastAPI** backend, a **Streamlit** frontend, and a scraper for fetching data. The application uses **Polars** to efficiently read and process financial data stored in Parquet files.
 
 ---
 
@@ -86,8 +86,6 @@ You can manually trigger the scraper by running:
 ```bash
 docker exec -it <container_id> python /app/scraper.py
 ```
-
-Logs are saved in `/var/log/cron/scraper.log`.
 
 ---
 
